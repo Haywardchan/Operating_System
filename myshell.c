@@ -134,7 +134,7 @@ int main()
     // TODO: replace the shell prompt with your ITSC account name
     // For example, if you ITSC account is cspeter@connect.ust.hk
     // You should replace ITSC with cspeter
-    char *prompt = "ITSC";
+    char *prompt ="mhchanax";
     char command_line[MAX_CMDLINE_LENGTH];
 
     // TODO:
@@ -162,7 +162,9 @@ int main()
             // the parent process simply wait for the child and do nothing
             wait(0);
         }
-    }
-
+        if(command_line == "exit")
+            printf(TEMPLATE_MYSHELL_END, getpid()); 
+    } 
+    
     return 0;
 }

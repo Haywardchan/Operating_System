@@ -122,18 +122,40 @@ void read_tokens(char **argv, char *line, int *numTokens, char *delimiter)
     *numTokens = argc;
 }
 
+
+
 void process_cmd(char *command_line)
 {
     // Uncomment this line to check the cmdline content
-    // printf("Debug: The command line is [%s]\n", command_line);
-    char *args[MAX_ARGUMENTS_PER_SEGMENT], pipe_segments[MAX_PIPE_SEGMENTS]; // character array buffer to store the pipe segements
-    int num_pipe_segments, num_args; // an output integer to store the number of pipe segment parsed by this function
-
-    read_tokens(pipe_segments, command_line, &num_pipe_segments, "|");//split command
-
-    for (int i=0 ; i<num_pipe_segments; i++){
-        read_tokens(args, pipe_segments[i], &num_args, SPACE_CHARS);
+    char *args[MAX_ARGUMENTS_PER_SEGMENT]={NULL}, *pipe_segments[MAX_PIPE_SEGMENTS]={NULL}, *argsrun[MAX_ARGUMENTS_PER_SEGMENT]={NULL}; // character array buffer to store the pipe segements
+    int num_pipe_segments, num_args, pfds[2];; // an output integer to store the number of pipe segment parsed by this function
+    //Feature 4 Piping
+    read_tokens(pipe_segments, command_line, &num_pipe_segments, "|");//split commands
+    //Feature 3: Redirection > <
+    for (int i=0 ; i<num_pipe_segments; i++){//for each command
+        read_tokens(args, pipe_segments[i], &num_args, SPACE_CHARS);//split args
+        for (int j=0; j<num_args; j++){
+            if(strcmp(args[j], ">")==0){//output to
+                args[j]==NULL;
+                close(STDOUT_FILENO);
+                int file=open(args[j+1], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);//write only file or create a new one from scratch
+                dup2(file, STDOUT_FILENO);//file become output
+                close(file);
+            }
+            if(strcmp(args[j], "<")==0){//input to
+                args[j]==NULL;
+                close(STDIN_FILENO);
+                int file=open(args[j+1], O_RDONLY, S_IRUSR | S_IWUSR);//read only file
+                dup2(file, STDIN_FILENO);//file become input
+                close(file);
+            }
+        }
     }
+    printf("Debug: The command line is [%s]\n", command_line);
+    printf("Debug: The pipe seg is [%s]\n", pipe_segments[0]);
+    printf("Debug: The argument is [%s]\n", args[0]);
+    printf("Debug: The arguments is [%s]\n", args[1]);
+    execvp(args[0], args);
 }
 
 void handler(int sig){

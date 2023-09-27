@@ -126,6 +126,19 @@ void process_cmd(char *command_line)
 {
     // Uncomment this line to check the cmdline content
     // printf("Debug: The command line is [%s]\n", command_line);
+    char *args[MAX_ARGUMENTS_PER_SEGMENT], pipe_segments[MAX_PIPE_SEGMENTS]; // character array buffer to store the pipe segements
+    int num_pipe_segments, num_args; // an output integer to store the number of pipe segment parsed by this function
+
+    read_tokens(pipe_segments, command_line, &num_pipe_segments, "|");//split command
+
+    for (int i=0 ; i<num_pipe_segments; i++){
+        read_tokens(args, pipe_segments[i], &num_args, SPACE_CHARS);
+    }
+}
+
+void handler(int sig){
+    printf(TEMPLATE_MYSHELL_TERMINATE, getpid());
+    exit(1);
 }
 
 /* The main function implementation */
@@ -146,10 +159,18 @@ int main()
     // The main event loop
     while (1)
     {
+        signal(SIGINT, handler);//Feature 2
+
 
         printf("%s> ", prompt);
         if (get_cmd_line(command_line) == -1)
             continue; /* empty line handling */
+
+        if (strcmp(command_line, "exit") == 0)//Feature 1
+        {
+            printf(TEMPLATE_MYSHELL_END, getpid());
+            exit(1);
+        }
 
         pid_t pid = fork();
         if (pid == 0)
@@ -162,8 +183,6 @@ int main()
             // the parent process simply wait for the child and do nothing
             wait(0);
         }
-        if(command_line == "exit")
-            printf(TEMPLATE_MYSHELL_END, getpid()); 
     } 
     
     return 0;
